@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SepsisGuard — Ward Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body data-is-admin="{{ 'true' if is_admin else 'false' }}" data-initial-patients='{{ initial_patients | tojson }}'>
+  <header class="topbar">
+    <div>
+      <h1>SepsisGuard — General Ward</h1>
+      <small id="admin-status-text" style="color:#94a3b8">
+        {% if is_admin %} Logged in as Admin {% else %} View Only Mode {% endif %}
+      </small>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <div id="alert-banner" class="alert-badge hidden">0 Critical Alerts</div>
+      <button id="auth-btn" class="btn" onclick="toggleAuth()"></button>
+      <button id="add-patient-btn" class="btn btn-primary {% if not is_admin %}hidden{% endif %}" onclick="openModal('patient-modal')">+ Add Patient</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="patient-grid" class="patient-grid"></div>
+  </main>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Admin Login</h2>
+      <input type="text" id="login-user" placeholder="Username (Admin)" class="input-field">
+      <input type="password" id="login-pass" placeholder="Password (Admin123)" class="input-field">
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal('login-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="handleLogin()">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Patient Modal -->
+  <div id="patient-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Register New Patient</h2>
+      <input type="text" id="pat-id" placeholder="Patient ID (e.g. P-103)" class="input-field">
+      <input type="text" id="pat-name" placeholder="Full Name (e.g. Sarah Jenkins)" class="input-field">
+      <input type="text" id="pat-bed" placeholder="Bed Number (e.g. Bed 12)" class="input-field">
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal('patient-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="handleAddPatient()">Save Patient</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

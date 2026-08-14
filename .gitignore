@@ -1,0 +1,13 @@
+# Node dependencies
+node_modules/
+npm-debug.log
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS/Editor specific files
+.DS_Store
+.vscode/

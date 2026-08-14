@@ -1,0 +1,227 @@
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+}
+
+/* Clinical Light Theme Background */
+body { 
+  background-color: #f1f5f9; /* Slate 100 - Clean Hospital Gray/Blue */
+  color: #0f172a;            /* Dark Slate - High contrast text */
+  padding: 24px; 
+}
+
+/* Hidden Utility */
+.hidden { 
+  display: none !important; 
+}
+
+/* Top Navigation Bar */
+.topbar { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 24px; 
+  background: #ffffff;
+  padding: 16px 24px;
+  border-radius: 10px;
+  border-bottom: 3px solid #0284c7; /* Clinical Cyan accent line */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.topbar h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0369a1; /* Deep Clinical Blue */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Alert Banner */
+.alert-badge { 
+  background: #fef2f2; 
+  border: 1px solid #fca5a5; 
+  color: #dc2626; 
+  padding: 6px 14px; 
+  border-radius: 20px; 
+  font-weight: 700; 
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Patient Cards Grid */
+.patient-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+  gap: 20px; 
+}
+
+/* Patient Card Component */
+.card { 
+  background: #ffffff; 
+  border: 1px solid #cbd5e1; 
+  border-top: 4px solid #10b981; /* Default Normal status border */
+  border-radius: 8px; 
+  padding: 18px; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+/* Warning & Critical States */
+.card.warning { 
+  border-top-color: #f59e0b; 
+  background: #fffbeb; 
+}
+
+.card.critical { 
+  border-top-color: #ef4444; 
+  background: #fef2f2; 
+  animation: pulse-border 1.5s infinite; 
+}
+
+@keyframes pulse-border { 
+  0%, 100% { border-color: #ef4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 
+  50% { border-color: #fca5a5; box-shadow: 0 0 10px 2px rgba(239, 68, 68, 0.2); } 
+}
+
+.card-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: flex-start;
+  margin-bottom: 14px; 
+}
+
+.card-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Risk Score Tags */
+.risk-tag { 
+  padding: 4px 10px; 
+  border-radius: 4px; 
+  font-weight: 800; 
+  font-size: 12px; 
+  letter-spacing: 0.5px;
+}
+
+.risk-low { background: #d1fae5; color: #065f46; }
+.risk-med { background: #fef3c7; color: #92400e; }
+.risk-hi { background: #fee2e2; color: #991b1b; }
+
+/* Vitals Display Grid */
+.vitals { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 10px; 
+  margin-bottom: 14px; 
+}
+
+.vital-box { 
+  background: #f8fafc; 
+  padding: 10px; 
+  border-radius: 6px; 
+  border: 1px solid #e2e8f0;
+}
+
+.val { 
+  font-size: 22px; 
+  font-weight: 800; 
+  display: block; 
+}
+
+.label { 
+  font-size: 11px; 
+  color: #64748b; 
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Clinical Status Colors */
+.bad { color: #dc2626; }   /* Alert Red */
+.warn { color: #d97706; }  /* Warning Amber */
+.ok { color: #059669; }    /* Normal Green */
+
+/* Buttons & Controls */
+.btn { 
+  background: #ffffff; 
+  color: #334155; 
+  border: 1px solid #cbd5e1; 
+  padding: 8px 16px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  font-weight: 600; 
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+
+.btn-primary { 
+  background: #0284c7; 
+  color: #ffffff; 
+  border-color: #0284c7; 
+}
+
+.btn-primary:hover { 
+  background: #0369a1; 
+}
+
+/* Modal Overlay & Forms */
+.modal { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100vw; 
+  height: 100vh; 
+  background: rgba(15, 23, 42, 0.6); 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 1000; 
+  backdrop-filter: blur(2px);
+}
+
+.modal-content { 
+  background: #ffffff; 
+  border: 1px solid #e2e8f0; 
+  padding: 28px; 
+  border-radius: 12px; 
+  width: 380px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h2 {
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.input-field { 
+  background: #f8fafc; 
+  border: 1px solid #cbd5e1; 
+  color: #0f172a; 
+  padding: 10px 14px; 
+  border-radius: 6px; 
+  font-size: 14px; 
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #0284c7;
+  background: #ffffff;
+}
+
+.modal-actions { 
+  display: flex; 
+  justify-content: flex-end; 
+  gap: 10px; 
+  margin-top: 8px; 
+}
