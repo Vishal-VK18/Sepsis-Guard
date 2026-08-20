@@ -3,20 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SepsisGuard — Ward Dashboard</title>
+  <title>SepsisGuard — Real-Time Clinical & IoT Ward Dashboard</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <!-- Socket.IO & Chart.js -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
-<body data-is-admin="{{ 'true' if is_admin else 'false' }}" data-initial-patients='{{ initial_patients | tojson }}'>
+<body 
+  data-is-admin="{{ 'true' if is_admin else 'false' }}" 
+  data-initial-patients='{{ initial_patients | tojson }}'
+  data-initial-nodes='{{ initial_nodes | tojson }}'
+  data-initial-history='{{ initial_history | tojson }}'
+>
+  <!-- Top Navigation Bar -->
   <header class="topbar">
-    <div>
-      <h1>SepsisGuard — General Ward</h1>
-      <small id="admin-status-text" style="color:#94a3b8">
+    <div class="brand-section">
+      <h1>
+        <span class="brand-icon">🏥</span> SepsisGuard
+        <span class="brand-badge">CLINICAL VITAL MONITOR</span>
+      </h1>
+      <small id="admin-status-text" class="status-subtitle">
         {% if is_admin %} Logged in as Admin {% else %} View Only Mode {% endif %}
       </small>
     </div>
     
-    <div style="display: flex; gap: 10px; align-items: center;">
+    <div class="topbar-controls">
+      <!-- Static Hardware Mode Indicator -->
+      <div class="mode-indicator">
+        <span class="dot dot-hardware"></span>
+        <span class="mode-text">HARDWARE MONITORING</span>
+      </div>
+
       <div id="alert-banner" class="alert-badge hidden">0 Critical Alerts</div>
       <button id="auth-btn" class="btn" onclick="toggleAuth()"></button>
       <button id="add-patient-btn" class="btn btn-primary {% if not is_admin %}hidden{% endif %}" onclick="openModal('patient-modal')">+ Add Patient</button>
@@ -24,13 +41,54 @@
   </header>
 
   <main class="container">
-    <div id="patient-grid" class="patient-grid"></div>
+    <!-- SECTION 1: Connected ESP32-C3 Hardware Sensor Nodes -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <div class="section-title-group">
+          <h2>📡 Connected IoT Sensor Nodes</h2>
+          <span class="section-subtitle">Real-time telemetry stream from Seeed Studio XIAO ESP32-C3 (TMP117 & MPU6050)</span>
+        </div>
+        <div class="iot-network-info">
+          <span class="protocol-badge">HTTP / WebSocket (1 Hz)</span>
+        </div>
+      </div>
+      
+      <div id="node-grid" class="node-grid">
+        <!-- ESP32 Node Cards rendered dynamically from real hardware data -->
+      </div>
+    </section>
+
+    <!-- SECTION 2: General Ward Patient Bed Monitoring -->
+    <section class="dashboard-section">
+      <div class="section-header">
+        <div class="section-title-group">
+          <h2>🏥 General Ward Bed Monitoring</h2>
+          <span class="section-subtitle">In-patient multi-bed clinical surveillance & early warning system</span>
+        </div>
+      </div>
+
+      <div id="patient-grid" class="patient-grid">
+        <!-- Patient records rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Prototype Medical Disclaimer Footer -->
+    <footer class="prototype-disclaimer">
+      <div class="disclaimer-content">
+        <span class="disclaimer-icon">ℹ️</span>
+        <div>
+          <strong>Medical Prototype Notice:</strong> SepsisGuard is an engineering prototype for continuous physiological and motion telemetry. 
+          It does not diagnose sepsis or replace clinical medical judgment. Complete sepsis risk assessment requires additional vital parameters (Heart Rate, SpO₂, Blood Pressure) pending future MAX30102 sensor integration.
+        </div>
+      </div>
+    </footer>
   </main>
 
   <!-- Login Modal -->
   <div id="login-modal" class="modal hidden">
     <div class="modal-content">
       <h2>Admin Login</h2>
+      <p class="modal-subtext">Enter credentials to unlock administrative controls.</p>
       <input type="text" id="login-user" placeholder="Username (Admin)" class="input-field">
       <input type="password" id="login-pass" placeholder="Password (Admin123)" class="input-field">
       <div class="modal-actions">
@@ -44,6 +102,7 @@
   <div id="patient-modal" class="modal hidden">
     <div class="modal-content">
       <h2>Register New Patient</h2>
+      <p class="modal-subtext">Register a new patient bed into the ward telemetry grid.</p>
       <input type="text" id="pat-id" placeholder="Patient ID (e.g. P-103)" class="input-field">
       <input type="text" id="pat-name" placeholder="Full Name (e.g. Sarah Jenkins)" class="input-field">
       <input type="text" id="pat-bed" placeholder="Bed Number (e.g. Bed 12)" class="input-field">

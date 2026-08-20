@@ -8,6 +8,13 @@ __pycache__/
 venv/
 .venv/
 
+# Local sensor database
+data/
+
+# Hardware & local configs
+firmware/secrets.h
+firmware/config.h
+
 # OS/Editor specific files
 .DS_Store
 .vscode/
