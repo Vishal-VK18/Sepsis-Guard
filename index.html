@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>SepsisGuard - Real-Time Patient Early Warning IoT Monitoring</title>
+  <meta name="description" content="SepsisGuard ESP32 Real-Time Patient Early Warning Monitoring Telemetry System with Web Serial support"/>
+
+  <!-- Google Fonts: Space Grotesk & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css"/>
+
+  <!-- Tailwind CSS via CDN with exact SepsisGuard palette token configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#F8F7E2",
+            "surface-dim": "#E8E7CE",
+            "surface-container": "#F8F7E2",
+            "surface-container-low": "#FBF9EC",
+            "surface-container-high": "#F2F0D8",
+            "surface-container-lowest": "#ffffff",
+            "primary": "#474C80",
+            "primary-container": "#474C80",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#F8F7E2",
+            "secondary": "#5B6096",
+            "secondary-container": "#D6D9F0",
+            "secondary-fixed": "#E2E4F8",
+            "on-secondary": "#ffffff",
+            "outline": "#7D81A8",
+            "outline-variant": "#9DA2CD",
+            "brand-lavender": "#9DA2CD",
+            "brand-primary": "#474C80",
+            "brand-surface": "#F8F7E2",
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem",
+            sm: "0.125rem",
+            md: "0.375rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px"
+          },
+          spacing: {
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2rem",
+            "gutter": "1rem",
+            "gutter-desktop": "1.5rem",
+            "margin": "1rem",
+            "margin-desktop": "2rem",
+          },
+          fontFamily: {
+            "headline-lg": ["Space Grotesk", "sans-serif"],
+            "headline-md": ["Space Grotesk", "sans-serif"],
+            "headline-sm": ["Space Grotesk", "sans-serif"],
+            "body-lg": ["JetBrains Mono", "monospace"],
+            "body-md": ["JetBrains Mono", "monospace"],
+            "body-sm": ["JetBrains Mono", "monospace"],
+            "label-md": ["Space Grotesk", "sans-serif"],
+            "label-sm": ["JetBrains Mono", "monospace"],
+            "telemetry-display": ["JetBrains Mono", "monospace"],
+          },
+          fontSize: {
+            "headline-lg": ["2.25rem", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-md": ["1.5rem", { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "headline-sm": ["1.125rem", { lineHeight: "1.4", letterSpacing: "0em", fontWeight: "600" }],
+            "telemetry-display": ["2.75rem", { lineHeight: "1", letterSpacing: "-0.04em", fontWeight: "700" }],
+            "body-lg": ["1rem", { lineHeight: "1.5", letterSpacing: "-0.01em", fontWeight: "400" }],
+            "body-md": ["0.875rem", { lineHeight: "1.5", letterSpacing: "0em", fontWeight: "400" }],
+            "body-sm": ["0.75rem", { lineHeight: "1.4", letterSpacing: "0.01em", fontWeight: "400" }],
+            "label-md": ["0.75rem", { lineHeight: "1", letterSpacing: "0.06em", fontWeight: "600" }],
+            "label-sm": ["0.625rem", { lineHeight: "1", letterSpacing: "0.08em", fontWeight: "600" }],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-surface font-body-md text-primary antialiased min-h-screen selection:bg-brand-lavender/30 selection:text-primary">
+
+  <!-- ========================================== -->
+  <!-- SIDEBAR NAVIGATION                         -->
+  <!-- ========================================== -->
+  <aside class="fixed left-0 top-0 h-screen w-72 bg-surface border-r border-outline-variant/40 z-50 flex flex-col justify-between select-none transition-all duration-300">
+    <div class="flex flex-col">
+      <!-- Brand Header -->
+      <div class="h-16 px-space-md flex items-center gap-space-sm border-b border-outline-variant/40">
+        <div class="w-9 h-9 rounded border border-outline-variant flex items-center justify-center bg-surface">
+          <span class="material-symbols-outlined text-primary-container text-[22px]">health_and_safety</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-headline-sm text-headline-sm uppercase tracking-tight text-primary-container leading-none">SepsisGuard</span>
+          <span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary mt-space-xs">Patient IoT Telemetry</span>
+        </div>
+      </div>
+
+      <!-- Nav Items -->
+      <nav id="sidebar-nav" class="px-space-sm pt-space-md flex flex-col gap-space-xs">
+        <a href="#dashboard" data-tab="dashboard" class="nav-link group flex items-center gap-space-sm px-space-md py-space-sm rounded transition-all bg-primary-container text-surface border border-primary-container shadow-none">
+          <span class="material-symbols-outlined text-[20px]">grid_view</span>
+          <span class="font-body-md text-body-md tracking-normal font-medium">Dashboard</span>
+        </a>
+        <a href="#history" data-tab="history" class="nav-link group flex items-center gap-space-sm px-space-md py-space-sm rounded border border-transparent text-secondary hover:border-outline-variant hover:text-primary-container transition-all">
+          <span class="material-symbols-outlined text-[20px]">history</span>
+          <span class="font-body-md text-body-md tracking-normal font-medium">History</span>
+        </a>
+        <a href="#reports" data-tab="reports" class="nav-link group flex items-center gap-space-sm px-space-md py-space-sm rounded border border-transparent text-secondary hover:border-outline-variant hover:text-primary-container transition-all">
+          <span class="material-symbols-outlined text-[20px]">summarize</span>
+          <span class="font-body-md text-body-md tracking-normal font-medium">Reports</span>
+        </a>
+        <a href="#sensors" data-tab="sensors" class="nav-link group flex items-center gap-space-sm px-space-md py-space-sm rounded border border-transparent text-secondary hover:border-outline-variant hover:text-primary-container transition-all">
+          <span class="material-symbols-outlined text-[20px]">sensors</span>
+          <span class="font-body-md text-body-md tracking-normal font-medium">Sensors</span>
+        </a>
+        <a href="#alerts" data-tab="alerts" class="nav-link group flex items-center gap-space-sm px-space-md py-space-sm rounded border border-transparent text-secondary hover:border-outline-variant hover:text-primary-container transition-all">
+          <span class="material-symbols-outlined text-[20px]">notifications_active</span>
+          <span class="font-body-md text-body-md tracking-normal font-medium">Alerts</span>
+        </a>
+        <a href="#settings" data-tab="settings" class="nav-link group flex items-center gap-space-sm px-space-md py-space-sm rounded border border-transparent text-secondary hover:border-outline-variant hover:text-primary-container transition-all">
+          <span class="material-symbols-outlined text-[20px]">settings</span>
+          <span class="font-body-md text-body-md tracking-normal font-medium">Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Sidebar Bottom Hardware Meta Pill -->
+    <div class="p-space-sm border-t border-outline-variant/40">
+      <div class="bg-surface border border-outline-variant rounded p-space-sm flex flex-col gap-space-xs">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-space-xs">
+            <span class="relative flex h-2 w-2">
+              <span id="sidebar-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+              <span id="sidebar-dot" class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span>
+            </span>
+            <span id="sidebar-conn-text" class="font-label-md text-label-md text-primary-container tracking-wider uppercase">ESP32 Ready</span>
+          </div>
+          <span class="font-label-sm text-label-sm px-space-xs py-0.5 border border-outline-variant rounded text-secondary">NODE-01</span>
+        </div>
+        <div class="grid grid-cols-2 gap-space-xs pt-space-xs border-t border-outline-variant/30 text-secondary">
+          <div class="flex flex-col">
+            <span class="font-label-sm text-label-sm text-secondary/70">MODE</span>
+            <span id="sidebar-mode" class="font-body-sm text-body-sm font-semibold text-primary-container">USB Serial</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-label-sm text-label-sm text-secondary/70">BAUD</span>
+            <span id="sidebar-baud" class="font-body-sm text-body-sm font-semibold text-primary-container">115200</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- MAIN LAYOUT WRAPPER                        -->
+  <!-- ========================================== -->
+  <div class="pl-72 flex flex-col min-h-screen">
+
+    <!-- Top Fixed Bar -->
+    <header class="fixed top-0 left-72 right-0 h-16 bg-surface/95 backdrop-blur border-b border-outline-variant/40 z-40 px-space-lg flex items-center justify-between">
+      <div class="flex items-center gap-space-sm">
+        <span class="material-symbols-outlined text-secondary text-[18px]">terminal</span>
+        <div class="flex items-center gap-space-xs">
+          <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">HARDWARE</span>
+          <span class="text-outline-variant font-body-sm text-body-sm">/</span>
+          <span id="top-subhead" class="font-label-sm text-label-sm uppercase tracking-wider text-primary-container font-semibold">ESP32 Patient Telemetry Stream</span>
+        </div>
+        <span class="font-label-sm text-label-sm px-space-xs py-0.5 border border-outline-variant rounded text-secondary ml-space-xs uppercase">Live Stream</span>
+      </div>
+
+      <div class="flex items-center gap-space-md">
+        <!-- Connect / Disconnect Action Button -->
+        <button id="btn-header-serial" class="bg-primary hover:bg-brand-lavender text-surface hover:text-primary px-space-md py-1.5 rounded font-label-md text-label-md tracking-wider uppercase transition-all flex items-center gap-1.5 font-semibold border border-primary">
+          <span class="material-symbols-outlined text-[16px]">usb</span>
+          <span id="btn-header-serial-text">Connect ESP32</span>
+        </button>
+
+        <div class="flex items-center gap-space-xs bg-secondary-fixed/50 px-space-sm py-1 rounded border border-outline-variant">
+          <span id="header-status-ping" class="inline-block w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+          <span id="header-status-text" class="font-label-sm text-label-sm text-primary-container font-semibold tracking-wider uppercase">System Operational</span>
+        </div>
+
+        <div class="flex items-center gap-space-xs text-secondary">
+          <span class="material-symbols-outlined text-primary-container text-[16px]">sync</span>
+          <span id="header-clock" class="font-body-sm text-body-sm text-secondary font-medium">--:--:-- (Live)</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="relative pt-16 w-full flex-1 bg-surface px-space-lg py-space-md">
+      <div class="flex flex-col w-full gap-y-space-lg select-none pb-space-xl">
+
+        <!-- ======================================================= -->
+        <!-- VIEW: DASHBOARD                                         -->
+        <!-- ======================================================= -->
+        <div id="tab-dashboard" class="tab-view flex flex-col gap-y-space-lg">
+
+          <!-- Top Context Header Bar -->
+          <section class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-sm pb-space-sm border-b border-outline-variant/40">
+            <div class="flex flex-col">
+              <div class="flex items-center gap-space-xs">
+                <span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-semibold bg-outline-variant/20 px-space-xs py-0.5 rounded">NODE-ESP32-SEPSIS</span>
+                <span class="font-label-sm text-label-sm uppercase tracking-wider text-outline-variant">//</span>
+                <span class="font-label-sm text-label-sm uppercase tracking-wider text-primary">PATIENT TELEMETRY STREAM</span>
+              </div>
+              <h1 class="font-headline-lg text-headline-lg text-primary tracking-tight mt-0.5 leading-none">Patient Monitoring Dashboard</h1>
+              <p class="font-body-sm text-body-sm text-secondary mt-1">Real-time vital signs monitoring &amp; early warning patient telemetry</p>
+            </div>
+
+            <!-- Top-Right System Meta Pill Group -->
+            <div class="flex flex-wrap items-center gap-space-xs text-primary bg-surface p-1.5 border border-outline-variant/40 rounded">
+              <div class="flex items-center gap-space-xs px-space-sm py-1 bg-primary text-surface rounded">
+                <span class="w-2 h-2 rounded-full bg-brand-lavender animate-ping"></span>
+                <span id="system-status-pill" class="font-label-sm text-label-sm font-semibold tracking-wider uppercase">System: Active</span>
+              </div>
+              <div class="flex items-center gap-1.5 px-space-sm py-1 border border-outline-variant/50 rounded bg-outline-variant/10">
+                <span class="material-symbols-outlined text-[15px] text-primary">schedule</span>
+                <span id="telemetry-live-clock" class="font-label-sm text-label-sm text-primary tabular-nums">--:--:-- (Live)</span>
+              </div>
+              <div class="flex items-center gap-1.5 px-space-sm py-1 border border-outline-variant/50 rounded bg-outline-variant/10">
+                <span class="material-symbols-outlined text-[15px] text-primary">cable</span>
+                <span id="dash-conn-status" class="font-label-sm text-label-sm text-primary">ESP32: Ready (115200 baud)</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Prominent Overall Monitoring Status Card -->
+          <section class="bg-surface border border-outline-variant rounded p-space-md shadow-sm">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-sm pb-space-sm border-b border-outline-variant/40">
+              <div class="flex items-center gap-space-sm">
+                <div class="w-3 h-3 bg-primary rotate-45"></div>
+                <span class="font-headline-sm text-headline-sm uppercase text-primary tracking-tight font-bold">Patient Monitoring Active</span>
+                <span class="font-label-sm text-label-sm text-primary px-space-xs py-0.5 border border-primary bg-outline-variant/20 uppercase">RTOS Pod 01</span>
+              </div>
+              <div class="flex items-center gap-space-xs">
+                <span class="font-label-sm text-label-sm text-secondary uppercase">Profile:</span>
+                <span class="font-label-sm text-label-sm text-primary font-semibold uppercase tracking-wider bg-outline-variant/20 px-space-xs py-0.5 border border-outline-variant/40">High-Precision Patient Telemetry Stream</span>
+              </div>
+            </div>
+
+            <!-- 6-Point Horizontal Status Metric Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-space-sm pt-space-md">
+              <div class="flex flex-col p-space-sm bg-outline-variant/10 border border-outline-variant/30 rounded">
+                <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Device</span>
+                <span class="font-body-md text-body-md font-semibold text-primary mt-0.5">ESP32 (Core v2.0)</span>
+              </div>
+              <div class="flex flex-col p-space-sm bg-outline-variant/10 border border-outline-variant/30 rounded">
+                <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Monitoring</span>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <span class="w-2 h-2 rounded-full bg-primary"></span>
+                  <span class="font-body-md text-body-md font-bold text-primary">Active</span>
+                </div>
+              </div>
+              <div class="flex flex-col p-space-sm bg-outline-variant/10 border border-outline-variant/30 rounded">
+                <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Sensors Online</span>
+                <span id="stat-sensors-online" class="font-body-md text-body-md font-bold text-primary mt-0.5">4/4 Active</span>
+              </div>
+              <div class="flex flex-col p-space-sm bg-outline-variant/10 border border-outline-variant/30 rounded">
+                <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Last Update</span>
+                <span id="stat-last-update" class="font-body-md text-body-md font-semibold text-primary mt-0.5">Live Stream</span>
+              </div>
+              <div class="flex flex-col p-space-sm bg-outline-variant/10 border border-outline-variant/30 rounded">
+                <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Temp Threshold</span>
+                <span class="font-body-md text-body-md font-bold text-primary mt-0.5 tabular-nums">34.0 °C</span>
+              </div>
+              <div class="flex flex-col p-space-sm bg-outline-variant/20 border border-primary/40 rounded">
+                <span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">Patient Status</span>
+                <span id="stat-patient-status" class="font-body-md text-body-md font-bold text-primary mt-0.5">Nominal</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- ============================================================= -->
+          <!-- ACTIVE BUZZER / EARLY WARNING ALERT BANNER                    -->
+          <!-- Triggered when Temp > 34°C OR Orientation > 90° OR BUZZER: ON -->
+          <!-- ============================================================= -->
+          <section id="alert-banner" class="hidden bg-brand-lavender/25 border-2 border-primary alert-pulse-border rounded p-space-md relative overflow-hidden transition-all duration-300">
+            <div class="absolute top-0 right-0 w-32 h-full pointer-events-none opacity-10 flex items-center justify-end pr-space-md">
+              <span class="material-symbols-outlined text-[120px] text-primary">warning</span>
+            </div>
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-md relative z-10">
+              <div class="flex items-start gap-space-md">
+                <div class="w-11 h-11 rounded bg-primary flex items-center justify-center flex-shrink-0 animate-bounce">
+                  <span class="material-symbols-outlined text-surface text-[26px]">notifications_active</span>
+                </div>
+                <div class="flex flex-col">
+                  <div class="flex items-center gap-space-xs flex-wrap">
+                    <span class="font-headline-sm text-headline-sm uppercase text-primary font-bold tracking-tight">ATTENTION: Patient Early Warning Alert</span>
+                    <span class="px-space-xs py-0.5 bg-primary text-surface font-label-sm text-label-sm tracking-widest uppercase rounded">HARDWARE PRIORITY 1</span>
+                  </div>
+                  <p class="font-body-md text-body-md text-primary mt-1 font-medium">
+                    ESP32 firmware triggered GPIO25 buzzer. Temperature (&gt;34.0 °C) or Orientation (&gt;90°) has exceeded early warning threshold.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Live Critical Metrics Capsule -->
+              <div class="flex items-center gap-space-md bg-surface border border-primary p-space-sm rounded">
+                <div class="flex flex-col border-r border-brand-lavender pr-space-sm">
+                  <span class="font-label-sm text-label-sm uppercase text-secondary">Temperature</span>
+                  <span id="alert-capsule-temp" class="font-body-lg text-body-lg font-bold text-primary tabular-nums">34.20 °C</span>
+                </div>
+                <div class="flex flex-col border-r border-brand-lavender pr-space-sm">
+                  <span class="font-label-sm text-label-sm uppercase text-secondary">Orientation</span>
+                  <span id="alert-capsule-orient" class="font-body-lg text-body-lg font-bold text-primary tabular-nums">18.5 °</span>
+                </div>
+                <div class="flex flex-col border-r border-brand-lavender pr-space-sm">
+                  <span class="font-label-sm text-label-sm uppercase text-secondary">Buzzer</span>
+                  <span id="alert-capsule-buzzer" class="font-label-sm text-label-sm font-bold bg-primary text-surface px-2 py-0.5 rounded uppercase mt-0.5">ACTIVE</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-label-sm text-label-sm uppercase text-secondary">Trigger Time</span>
+                  <span id="alert-capsule-time" class="font-body-sm text-body-sm font-semibold text-primary mt-0.5 tabular-nums">--:-- --</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Alert Actions Row -->
+            <div class="flex flex-wrap items-center gap-space-sm mt-space-md pt-space-sm border-t border-primary/30 relative z-10">
+              <button id="btn-alert-ack" class="bg-primary hover:bg-brand-lavender text-surface hover:text-primary px-space-md py-space-xs rounded font-label-md text-label-md tracking-wider uppercase transition-all flex items-center gap-space-xs font-semibold">
+                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                <span id="btn-alert-ack-text">Acknowledge Alert</span>
+              </button>
+              <button id="btn-alert-details" class="border border-primary hover:bg-brand-lavender/20 text-primary px-space-md py-space-xs rounded font-label-md text-label-md tracking-wider uppercase transition-all flex items-center gap-space-xs font-semibold">
+                <span class="material-symbols-outlined text-[16px]">info</span>
+                View Details
+              </button>
+              <button id="btn-alert-silence" class="border border-primary bg-brand-lavender/20 hover:bg-primary text-primary hover:text-surface px-space-md py-space-xs rounded font-label-md text-label-md tracking-wider uppercase transition-all flex items-center gap-space-xs font-semibold">
+                <span class="material-symbols-outlined text-[16px]">volume_off</span>
+                Mute Browser Audio
+              </button>
+              <span class="font-label-sm text-label-sm text-secondary ml-auto uppercase tracking-wide">Signal: Hardware Pin GPIO25 triggered (Firmware Controlled)</span>
+            </div>
+          </section>
+
+          <!-- ======================================================= -->
+          <!-- MULTI-COLUMN SENSOR CARDS GRID                          -->
+          <!-- ======================================================= -->
+          <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-space-md">
+
+            <!-- CARD 1: TEMPERATURE (TMP117) -->
+            <div class="sensor-card bg-surface border border-primary rounded p-space-md flex flex-col justify-between shadow-sm relative cursor-pointer hover:border-primary/80 transition-all" data-sensor="temperature">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <div class="flex items-center gap-space-xs">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary">SENSOR //</span>
+                    <span class="font-label-sm text-label-sm uppercase text-primary font-semibold">TMP117</span>
+                  </div>
+                  <span id="badge-temp-status" class="px-space-xs py-0.5 bg-primary text-surface font-label-sm text-label-sm tracking-wider uppercase rounded font-semibold">Nominal</span>
+                </div>
+
+                <div class="flex items-baseline justify-between mt-space-sm">
+                  <div>
+                    <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider block">Body Temperature</span>
+                    <div class="font-telemetry-display text-telemetry-display text-primary font-bold tracking-tighter leading-none mt-1 tabular-nums">
+                      <span id="dash-val-temp">--.--</span> <span class="font-headline-sm text-headline-sm text-secondary">°C</span>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary block">Normal Range</span>
+                    <span class="font-body-sm text-body-sm font-semibold text-primary">35.0 °C – 37.5 °C</span>
+                    <div id="dash-trend-temp" class="font-label-sm text-label-sm text-primary font-semibold mt-1 bg-brand-lavender/20 px-1.5 py-0.5 rounded border border-brand-lavender/40">
+                      Baseline Tracking
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mini Sparkline SVG -->
+                <div class="mt-space-md p-space-xs bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+                  <div class="flex justify-between items-center text-secondary font-label-sm text-label-sm mb-1 px-1">
+                    <span>T-60m</span>
+                    <span>SETPOINT: 34.0°C</span>
+                    <span>NOW</span>
+                  </div>
+                  <svg id="sparkline-temp" class="w-full h-16" fill="none" preserveAspectRatio="none" viewBox="0 0 280 64"></svg>
+                </div>
+              </div>
+
+              <div class="pt-space-md mt-space-sm border-t border-brand-lavender/30 flex items-center justify-between">
+                <span id="update-temp-time" class="font-label-sm text-label-sm text-secondary">Updated: --:--:--</span>
+                <span class="font-label-sm text-label-sm uppercase font-semibold text-primary hover:text-secondary flex items-center gap-1">
+                  View Temperature Telemetry →
+                </span>
+              </div>
+            </div>
+
+            <!-- CARD 2: HEART RATE (MAX30102) -->
+            <div class="sensor-card bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between shadow-sm cursor-pointer hover:border-primary transition-all" data-sensor="heartrate">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <div class="flex items-center gap-space-xs">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary">SENSOR //</span>
+                    <span class="font-label-sm text-label-sm uppercase text-primary font-semibold">MAX30102</span>
+                  </div>
+                  <span id="badge-hr-status" class="px-space-xs py-0.5 border border-outline text-secondary font-label-sm text-label-sm tracking-wider uppercase rounded font-semibold bg-brand-lavender/10">Disconnected</span>
+                </div>
+
+                <div class="flex items-baseline justify-between mt-space-sm">
+                  <div>
+                    <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider block">Heart Rate</span>
+                    <div class="font-telemetry-display text-telemetry-display text-primary font-bold tracking-tighter leading-none mt-1 tabular-nums">
+                      <span id="dash-val-hr">--</span> <span class="font-headline-sm text-headline-sm text-secondary">BPM</span>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary block">Normal Range</span>
+                    <span class="font-body-sm text-body-sm font-semibold text-primary">60 – 100 BPM</span>
+                    <div id="dash-hr-subtext" class="font-label-sm text-label-sm text-secondary font-medium mt-1 bg-brand-lavender/10 px-1.5 py-0.5 rounded border border-brand-lavender/40">
+                      Physical Sensor Unconnected
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mini Sparkline SVG -->
+                <div class="mt-space-md p-space-xs bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+                  <div class="flex justify-between items-center text-secondary font-label-sm text-label-sm mb-1 px-1">
+                    <span>T-60m</span>
+                    <span>RESTING RANGE: 60-100</span>
+                    <span>NOW</span>
+                  </div>
+                  <svg id="sparkline-hr" class="w-full h-16" fill="none" preserveAspectRatio="none" viewBox="0 0 280 64"></svg>
+                </div>
+              </div>
+
+              <div class="pt-space-md mt-space-sm border-t border-brand-lavender/30 flex items-center justify-between">
+                <span id="update-hr-time" class="font-label-sm text-label-sm text-secondary">Updated: --:--:--</span>
+                <span class="font-label-sm text-label-sm uppercase font-semibold text-primary hover:text-secondary flex items-center gap-1">
+                  View Heart Rate Details →
+                </span>
+              </div>
+            </div>
+
+            <!-- CARD 3: ORIENTATION (MPU6050) -->
+            <div class="sensor-card bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between shadow-sm cursor-pointer hover:border-primary transition-all" data-sensor="orientation">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <div class="flex items-center gap-space-xs">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary">TRANSDUCER //</span>
+                    <span class="font-label-sm text-label-sm uppercase text-primary font-semibold">MPU6050</span>
+                  </div>
+                  <span id="badge-orient-status" class="px-space-xs py-0.5 border border-primary text-primary font-label-sm text-label-sm tracking-wider uppercase rounded font-semibold bg-brand-lavender/15">Normal</span>
+                </div>
+
+                <div class="flex items-baseline justify-between mt-space-sm">
+                  <div>
+                    <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider block">Patient Posture Angle</span>
+                    <div class="font-telemetry-display text-telemetry-display text-primary font-bold tracking-tighter leading-none mt-1 tabular-nums">
+                      <span id="dash-val-orient">--.-</span> <span class="font-headline-sm text-headline-sm text-secondary">°</span>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-label-sm text-label-sm uppercase text-primary font-semibold block bg-brand-lavender/20 px-1 py-0.5 rounded border border-brand-lavender/40">
+                      Bed Angle / Tilt
+                    </span>
+                    <span class="font-label-sm text-label-sm text-secondary block mt-1">Threshold: &gt; 90° Alert</span>
+                    <span class="font-label-sm text-label-sm text-primary font-medium">Real-time Motion Stream</span>
+                  </div>
+                </div>
+
+                <!-- Mini Sparkline SVG -->
+                <div class="mt-space-md p-space-xs bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+                  <div class="flex justify-between items-center text-secondary font-label-sm text-label-sm mb-1 px-1">
+                    <span>-90°</span>
+                    <span>THRESHOLD: 90°</span>
+                    <span>+90°</span>
+                  </div>
+                  <svg id="sparkline-orient" class="w-full h-16" fill="none" preserveAspectRatio="none" viewBox="0 0 280 64"></svg>
+                </div>
+              </div>
+
+              <div class="pt-space-md mt-space-sm border-t border-brand-lavender/30 flex items-center justify-between">
+                <span id="update-orient-time" class="font-label-sm text-label-sm text-secondary">Updated: --:--:--</span>
+                <span class="font-label-sm text-label-sm uppercase font-semibold text-primary hover:text-secondary flex items-center gap-1">
+                  View Posture Curve →
+                </span>
+              </div>
+            </div>
+
+            <!-- CARD 4: MOTION & ACCELERATION (MPU6050) -->
+            <div class="sensor-card bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between shadow-sm cursor-pointer hover:border-primary transition-all" data-sensor="motion">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <div class="flex items-center gap-space-xs">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary">INERTIAL UNIT //</span>
+                    <span class="font-label-sm text-label-sm uppercase text-primary font-semibold">MPU6050</span>
+                  </div>
+                  <span id="dash-motion-badge" class="px-space-xs py-0.5 border border-primary text-primary font-label-sm text-label-sm tracking-wider uppercase rounded font-semibold bg-brand-lavender/20">Active Tracking</span>
+                </div>
+
+                <div class="flex items-baseline justify-between mt-space-sm">
+                  <div>
+                    <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider block">Motion &amp; Acceleration</span>
+                    <div id="dash-val-motion-state" class="font-telemetry-display text-telemetry-display text-primary font-bold tracking-tighter leading-none mt-1">
+                      ACTIVE
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary block">Sampling Rate</span>
+                    <span class="font-body-sm text-body-sm font-semibold text-primary">100 Hz Internal</span>
+                    <span class="font-label-sm text-label-sm text-secondary block mt-1">3-Axis Accel + Gyro</span>
+                  </div>
+                </div>
+
+                <!-- Radar Motion Visual Box -->
+                <div class="mt-space-md p-space-xs bg-surface border border-brand-lavender rounded relative overflow-hidden h-24 flex items-center justify-center">
+                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+                    <div class="w-16 h-16 rounded-full border border-brand-lavender"></div>
+                    <div class="w-24 h-24 rounded-full border border-brand-lavender absolute"></div>
+                    <div class="w-full h-px bg-brand-lavender absolute"></div>
+                    <div class="h-full w-px bg-brand-lavender absolute"></div>
+                  </div>
+                  <div class="relative z-10 flex flex-col items-center text-center px-space-sm">
+                    <span class="material-symbols-outlined text-primary text-[22px] radar-sweeper">screen_rotation</span>
+                    <span id="dash-motion-radar-text" class="font-label-sm text-label-sm font-semibold text-primary mt-1 tracking-wider uppercase">6-DOF Inertial Stream Active</span>
+                    <span class="font-label-sm text-label-sm text-secondary">I2C Address 0x68 Active</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-space-xs pt-space-sm mt-space-xs border-t border-brand-lavender/20 text-center">
+                  <div class="flex flex-col">
+                    <span class="font-label-sm text-label-sm text-secondary uppercase">Ax</span>
+                    <span id="dash-val-ax" class="font-body-sm text-body-sm font-semibold text-primary">0.05 g</span>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="font-label-sm text-label-sm text-secondary uppercase">Ay</span>
+                    <span id="dash-val-ay" class="font-body-sm text-body-sm font-semibold text-primary">0.02 g</span>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="font-label-sm text-label-sm text-secondary uppercase">Az</span>
+                    <span id="dash-val-az" class="font-body-sm text-body-sm font-semibold text-primary">0.98 g</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-space-sm mt-space-sm border-t border-brand-lavender/30 flex items-center justify-between">
+                <span class="font-label-sm text-label-sm text-secondary">Patient Bed Activity</span>
+                <span class="font-label-sm text-label-sm uppercase font-semibold text-primary">View Motion Details →</span>
+              </div>
+            </div>
+
+            <!-- CARD 5: BUZZER / ALERT SYSTEM (Col-span 2) -->
+            <div class="sensor-card bg-surface border border-primary rounded p-space-md flex flex-col justify-between shadow-sm md:col-span-2 xl:col-span-2 cursor-pointer hover:border-primary/80 transition-all" data-sensor="buzzer">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <div class="flex items-center gap-space-xs">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary">HARDWARE ACTUATOR //</span>
+                    <span class="font-label-sm text-label-sm uppercase text-primary font-semibold">Piezoelectric Alarm</span>
+                  </div>
+                  <div id="dash-buzzer-badge-wrap" class="flex items-center gap-1.5 px-space-xs py-0.5 border border-brand-lavender text-secondary rounded">
+                    <span id="dash-buzzer-ping" class="w-2 h-2 rounded-full bg-brand-lavender"></span>
+                    <span id="dash-buzzer-status" class="font-label-sm text-label-sm font-bold tracking-widest uppercase">BUZZER OFF</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md mt-space-sm">
+                  <div class="flex flex-col">
+                    <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Actuator Name</span>
+                    <span class="font-headline-sm text-headline-sm text-primary font-bold mt-0.5">Early Warning Buzzer &amp; Audio Alarm</span>
+                    <p id="dash-buzzer-desc" class="font-body-sm text-body-sm text-primary mt-1 font-medium">State Description: Standby / Normal Operating Conditions</p>
+                    <div class="mt-space-sm p-space-sm bg-brand-lavender/15 border border-brand-lavender/40 rounded flex flex-col gap-1">
+                      <div class="flex items-center justify-between">
+                        <span class="font-label-sm text-label-sm uppercase text-secondary">Hardware Pin</span>
+                        <span class="font-body-sm text-body-sm font-bold text-primary">GPIO 25 (Active HIGH)</span>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <span class="font-label-sm text-label-sm uppercase text-secondary">Trigger Logic</span>
+                        <span class="font-body-sm text-body-sm font-semibold text-primary">Temp &gt; 34.0 °C OR |Orient| &gt; 90°</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col justify-between bg-brand-lavender/10 p-space-sm border border-brand-lavender/40 rounded">
+                    <div>
+                      <span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary block">Interlock &amp; Safety Controls</span>
+                      <p class="font-body-sm text-body-sm text-secondary mt-0.5">Acoustic alert is triggered strictly by ESP32 firmware on GPIO25. Browser provides auditory/visual monitoring.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-space-sm pt-space-sm border-t border-brand-lavender/30">
+                      <button id="btn-buzzer-mute" class="bg-primary hover:bg-brand-lavender text-surface hover:text-primary px-space-md py-space-xs rounded font-label-md text-label-md uppercase tracking-wider font-semibold transition-all flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]">volume_off</span>
+                        Mute Audio
+                      </button>
+                      <button id="btn-buzzer-test" class="border border-primary hover:bg-brand-lavender/20 text-primary px-space-md py-space-xs rounded font-label-md text-label-md uppercase tracking-wider font-semibold transition-all flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]">spatial_audio_off</span>
+                        Test Browser Tone
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-space-sm mt-space-md border-t border-brand-lavender/30 flex items-center justify-between text-secondary font-label-sm text-label-sm">
+                <span>Duty Cycle: Continuous / Pulsed</span>
+                <span>Acoustic Output: 85 dB @ 10cm</span>
+              </div>
+            </div>
+
+            <!-- CARD 6: SENSOR NETWORK & INTERFACE STATUS -->
+            <div class="bg-surface border border-brand-lavender/60 rounded p-space-md flex flex-col justify-between shadow-sm opacity-90">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <div class="flex items-center gap-space-xs">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary">SENSORS //</span>
+                    <span class="font-label-sm text-label-sm uppercase text-primary font-semibold">HARDWARE BUS</span>
+                  </div>
+                  <span class="px-space-xs py-0.5 border border-primary text-primary font-label-sm text-label-sm tracking-wider uppercase rounded font-semibold bg-brand-lavender/10">I2C &amp; GPIO Active</span>
+                </div>
+
+                <div class="flex items-baseline justify-between mt-space-sm">
+                  <div>
+                    <span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider block">Integrated Sensors</span>
+                    <div class="font-telemetry-display text-telemetry-display text-primary font-bold tracking-tighter leading-none mt-1">
+                      6 NODES
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="font-label-sm text-label-sm uppercase text-secondary block">Communication Bus</span>
+                    <span class="font-body-sm text-body-sm font-semibold text-primary">I2C Fast Mode (400kHz)</span>
+                    <span class="font-label-sm text-label-sm text-secondary block mt-1">SDA D4 / SCL D5</span>
+                  </div>
+                </div>
+
+                <div class="mt-space-md p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded text-secondary font-body-sm text-body-sm">
+                  <div class="flex items-center gap-1.5 font-semibold text-primary">
+                    <span class="material-symbols-outlined text-[18px]">developer_board</span>
+                    <span>Sensor Bus Mapping</span>
+                  </div>
+                  <p class="mt-1 text-secondary text-[11px] leading-relaxed">
+                    TMP117 (0x48), MPU6050 (0x68), MAX30102 (0x57), SSD1306 (0x3C), Buzzer (GPIO25), Push Button (GPIO).
+                  </p>
+                </div>
+              </div>
+
+              <div class="pt-space-md mt-space-sm border-t border-brand-lavender/30 flex items-center justify-between text-secondary font-label-sm text-label-sm">
+                <span>Hardware Bus: I2C &amp; GPIO</span>
+                <span class="font-semibold text-primary">READY</span>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- ======================================================= -->
+          <!-- RECENT ALERTS TIMELINE PANEL                            -->
+          <!-- ======================================================= -->
+          <section class="bg-surface border border-brand-lavender rounded p-space-md shadow-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-sm border-b border-brand-lavender/40">
+              <div class="flex items-center gap-space-xs">
+                <span class="material-symbols-outlined text-primary text-[20px]">history_toggle_off</span>
+                <span class="font-headline-sm text-headline-sm uppercase text-primary font-bold tracking-tight">Recent Early Warning Timeline</span>
+              </div>
+              <div class="flex items-center gap-space-sm">
+                <span class="font-label-sm text-label-sm text-secondary uppercase">Buffer Capacity: 256 Events</span>
+                <button id="btn-export-timeline-log" class="font-label-sm text-label-sm uppercase font-semibold text-primary hover:text-secondary border border-brand-lavender px-2 py-0.5 rounded bg-brand-lavender/10">
+                  [ Export Event Log ]
+                </button>
+              </div>
+            </div>
+
+            <!-- Telemetry Log Table -->
+            <div class="overflow-x-auto mt-space-sm">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-brand-lavender/40 text-secondary font-label-sm text-label-sm uppercase">
+                    <th class="py-space-xs px-space-sm">Timestamp</th>
+                    <th class="py-space-xs px-space-sm">Telemetry Event</th>
+                    <th class="py-space-xs px-space-sm">Hardware Buzzer</th>
+                    <th class="py-space-xs px-space-sm">Acknowledgement State</th>
+                    <th class="py-space-xs px-space-sm text-right">Audit</th>
+                  </tr>
+                </thead>
+                <tbody id="timeline-table-body" class="divide-y divide-brand-lavender/20 font-body-sm text-body-sm text-primary">
+                  <!-- Populated dynamically via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Diagnostic Footnote -->
+            <div class="mt-space-sm pt-space-xs border-t border-brand-lavender/30 flex flex-col sm:flex-row items-start sm:items-center justify-between text-secondary font-label-sm text-label-sm">
+              <span id="footer-uart-info">UART Channel: Web Serial • Baud Rate: 115200 • Data: 8N1</span>
+              <span>Firmware Buzzer Trigger: Temp &gt; 34.0 °C OR |Orient| &gt; 90° • Pin: GPIO 25</span>
+            </div>
+          </section>
+
+        </div><!-- /#tab-dashboard -->
+
+
+        <!-- ======================================================= -->
+        <!-- VIEW: HISTORY                                           -->
+        <!-- ======================================================= -->
+        <div id="tab-history" class="tab-view hidden flex flex-col gap-y-space-lg">
+          <section class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-sm pb-space-sm border-b border-brand-lavender/40">
+            <div>
+              <h2 class="font-headline-lg text-headline-lg text-primary tracking-tight leading-none">Patient Telemetry History</h2>
+              <p class="font-body-sm text-body-sm text-secondary mt-1">Recorded sensor logs and temporal waveform analysis</p>
+            </div>
+            <!-- Filters -->
+            <div class="flex flex-wrap items-center gap-space-xs bg-surface p-1.5 border border-brand-lavender/40 rounded">
+              <span class="font-label-sm text-label-sm uppercase text-secondary px-2">Metric:</span>
+              <button class="hist-metric-btn px-3 py-1 rounded font-label-sm text-label-sm uppercase font-semibold bg-primary text-surface" data-metric="temperature">Temperature</button>
+              <button class="hist-metric-btn px-3 py-1 rounded font-label-sm text-label-sm uppercase font-semibold border border-brand-lavender text-primary hover:bg-brand-lavender/10" data-metric="heartRate">Heart Rate</button>
+              <button class="hist-metric-btn px-3 py-1 rounded font-label-sm text-label-sm uppercase font-semibold border border-brand-lavender text-primary hover:bg-brand-lavender/10" data-metric="orientation">Orientation</button>
+              <span class="font-label-sm text-label-sm uppercase text-secondary px-2 ml-2">Time:</span>
+              <button class="hist-time-btn px-2.5 py-1 rounded font-label-sm text-label-sm uppercase border border-brand-lavender text-primary hover:bg-brand-lavender/10" data-window="15m">15m</button>
+              <button class="hist-time-btn px-2.5 py-1 rounded font-label-sm text-label-sm uppercase border border-brand-lavender text-primary hover:bg-brand-lavender/10" data-window="1h">1h</button>
+              <button class="hist-time-btn px-2.5 py-1 rounded font-label-sm text-label-sm uppercase border border-brand-lavender text-primary hover:bg-brand-lavender/10" data-window="today">Today</button>
+              <button class="hist-time-btn px-2.5 py-1 rounded font-label-sm text-label-sm uppercase bg-primary text-surface" data-window="all">All</button>
+            </div>
+          </section>
+
+          <!-- Interactive Expanded Chart Container -->
+          <div id="history-chart-container" class="w-full"></div>
+
+          <!-- History Records Table -->
+          <section class="bg-surface border border-brand-lavender rounded p-space-md shadow-sm">
+            <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+              <span class="font-headline-sm text-headline-sm uppercase text-primary font-bold">Stored Telemetry Records</span>
+              <span id="hist-total-count" class="font-label-sm text-label-sm text-secondary uppercase">0 Records</span>
+            </div>
+            <div class="overflow-x-auto mt-space-sm max-h-96">
+              <table class="w-full text-left border-collapse">
+                <thead class="sticky top-0 bg-surface">
+                  <tr class="border-b border-brand-lavender/40 text-secondary font-label-sm text-label-sm uppercase">
+                    <th class="py-space-xs px-space-sm">Time</th>
+                    <th class="py-space-xs px-space-sm">Temperature</th>
+                    <th class="py-space-xs px-space-sm">Heart Rate</th>
+                    <th class="py-space-xs px-space-sm">Orientation</th>
+                    <th class="py-space-xs px-space-sm">MPU6050 Status</th>
+                    <th class="py-space-xs px-space-sm">Buzzer State</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body" class="divide-y divide-brand-lavender/20 font-body-sm text-body-sm text-primary"></tbody>
+              </table>
+            </div>
+          </section>
+        </div><!-- /#tab-history -->
+
+
+        <!-- ======================================================= -->
+        <!-- VIEW: REPORTS                                           -->
+        <!-- ======================================================= -->
+        <div id="tab-reports" class="tab-view hidden flex flex-col gap-y-space-lg">
+          <section class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-sm pb-space-sm border-b border-brand-lavender/40">
+            <div>
+              <h2 class="font-headline-lg text-headline-lg text-primary tracking-tight leading-none">Diagnostic &amp; Clinical Reports</h2>
+              <p class="font-body-sm text-body-sm text-secondary mt-1">Telemetry analysis, statistical aggregation, and CSV data export</p>
+            </div>
+            <div class="flex items-center gap-space-sm">
+              <button id="btn-report-export-csv" class="bg-primary hover:bg-brand-lavender text-surface hover:text-primary px-space-md py-space-xs rounded font-label-md text-label-md tracking-wider uppercase font-semibold flex items-center gap-1.5 transition-all">
+                <span class="material-symbols-outlined text-[16px]">download</span>
+                Export CSV
+              </button>
+              <button id="btn-report-print" class="border border-primary text-primary hover:bg-brand-lavender/10 px-space-md py-space-xs rounded font-label-md text-label-md tracking-wider uppercase font-semibold flex items-center gap-1.5 transition-all">
+                <span class="material-symbols-outlined text-[16px]">print</span>
+                Print Report
+              </button>
+            </div>
+          </section>
+
+          <!-- Report Filter Bar -->
+          <div class="flex flex-wrap items-center gap-space-md bg-surface border border-brand-lavender rounded p-space-sm">
+            <div class="flex items-center gap-space-xs">
+              <label for="report-select-type" class="font-label-sm text-label-sm text-secondary uppercase">Report Scope:</label>
+              <select id="report-select-type" class="bg-surface border border-brand-lavender rounded px-2 py-1 font-label-sm text-label-sm text-primary font-semibold">
+                <option value="complete">Complete Patient Telemetry</option>
+                <option value="temperature">Temperature Only (TMP117)</option>
+                <option value="heartrate">Heart Rate (MAX30102)</option>
+                <option value="orientation">Orientation &amp; Posture (MPU6050)</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-space-xs">
+              <label for="report-select-window" class="font-label-sm text-label-sm text-secondary uppercase">Time Range:</label>
+              <select id="report-select-window" class="bg-surface border border-brand-lavender rounded px-2 py-1 font-label-sm text-label-sm text-primary font-semibold">
+                <option value="all">All Stored Data</option>
+                <option value="today">Today</option>
+                <option value="1h">Last 1 Hour</option>
+                <option value="15m">Last 15 Minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Statistical Summary Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-space-sm">
+            <div class="flex flex-col p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+              <span class="font-label-sm text-label-sm uppercase text-secondary">Total Readings</span>
+              <span id="rep-stat-readings" class="font-headline-sm text-headline-sm text-primary font-bold mt-1">0</span>
+            </div>
+            <div class="flex flex-col p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+              <span class="font-label-sm text-label-sm uppercase text-secondary">Temp Min / Max</span>
+              <span id="rep-stat-temp-range" class="font-body-md text-body-md text-primary font-bold mt-1">-- / --</span>
+            </div>
+            <div class="flex flex-col p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+              <span class="font-label-sm text-label-sm uppercase text-secondary">Temp Average</span>
+              <span id="rep-stat-temp-avg" class="font-headline-sm text-headline-sm text-primary font-bold mt-1">-- °C</span>
+            </div>
+            <div class="flex flex-col p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+              <span class="font-label-sm text-label-sm uppercase text-secondary">Heart Rate Avg</span>
+              <span id="rep-stat-hr-avg" class="font-headline-sm text-headline-sm text-primary font-bold mt-1">-- BPM</span>
+            </div>
+            <div class="flex flex-col p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+              <span class="font-label-sm text-label-sm uppercase text-secondary">Orientation Range</span>
+              <span id="rep-stat-orient-range" class="font-headline-sm text-headline-sm text-primary font-bold mt-1">--</span>
+            </div>
+            <div class="flex flex-col p-space-sm bg-brand-lavender/20 border border-primary/40 rounded">
+              <span class="font-label-sm text-label-sm uppercase text-primary font-semibold">Early Warning Triggers</span>
+              <span id="rep-stat-alerts" class="font-headline-sm text-headline-sm text-primary font-bold mt-1">0</span>
+            </div>
+          </div>
+
+          <!-- Report Data Preview Table -->
+          <section class="bg-surface border border-brand-lavender rounded p-space-md shadow-sm">
+            <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+              <span class="font-headline-sm text-headline-sm uppercase text-primary font-bold">Report Preview</span>
+              <span class="font-label-sm text-label-sm text-secondary uppercase">Showing latest 50 records</span>
+            </div>
+            <div class="overflow-x-auto mt-space-sm max-h-96">
+              <table class="report-table w-full text-left border-collapse">
+                <thead class="sticky top-0 bg-surface">
+                  <tr class="border-b border-brand-lavender/40 text-secondary font-label-sm text-label-sm uppercase">
+                    <th class="py-space-xs px-space-sm">Timestamp</th>
+                    <th class="py-space-xs px-space-sm">Temperature</th>
+                    <th class="py-space-xs px-space-sm">Heart Rate</th>
+                    <th class="py-space-xs px-space-sm">Orientation</th>
+                    <th class="py-space-xs px-space-sm">MPU6050 Status</th>
+                    <th class="py-space-xs px-space-sm">Buzzer Event</th>
+                  </tr>
+                </thead>
+                <tbody id="report-table-body" class="divide-y divide-brand-lavender/20 font-body-sm text-body-sm text-primary"></tbody>
+              </table>
+            </div>
+          </section>
+        </div><!-- /#tab-reports -->
+
+
+        <!-- ======================================================= -->
+        <!-- VIEW: SENSORS OVERVIEW                                  -->
+        <!-- ======================================================= -->
+        <div id="tab-sensors" class="tab-view hidden flex flex-col gap-y-space-lg">
+          <section class="pb-space-sm border-b border-brand-lavender/40">
+            <h2 class="font-headline-lg text-headline-lg text-primary tracking-tight leading-none">Sensor Hardware Specifications</h2>
+            <p class="font-body-sm text-body-sm text-secondary mt-1">Microcontroller pin configurations and transducer calibration details</p>
+          </section>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+            <!-- TMP117 Spec -->
+            <div class="bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <span class="font-headline-sm text-headline-sm text-primary uppercase font-bold">TMP117 Clinical Temperature</span>
+                  <span class="font-label-sm text-label-sm bg-primary text-surface px-2 py-0.5 rounded uppercase">ACTIVE</span>
+                </div>
+                <div class="mt-space-sm space-y-1 text-secondary font-body-sm text-body-sm">
+                  <p><strong class="text-primary">I2C Interface:</strong> SDA Pin D4 / SCL Pin D5 (Address 0x48)</p>
+                  <p><strong class="text-primary">Parameters:</strong> High-Precision Patient Body Temperature (°C)</p>
+                  <p><strong class="text-primary">Accuracy:</strong> ±0.1°C (-20°C to +50°C, meets ASTM E1112)</p>
+                  <p><strong class="text-primary">Sampling Period:</strong> 1.0 Second</p>
+                  <p><strong class="text-primary">Firmware Setpoint:</strong> Early warning buzzer trigger at &gt; 34.0 °C</p>
+                </div>
+              </div>
+              <button class="mt-space-md border border-primary text-primary hover:bg-primary hover:text-surface py-1 rounded font-label-md text-label-md uppercase tracking-wider transition-all open-modal-btn" data-sensor="temperature">
+                Open Temperature Diagnostics
+              </button>
+            </div>
+
+            <!-- MPU6050 Spec -->
+            <div class="bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <span class="font-headline-sm text-headline-sm text-primary uppercase font-bold">MPU6050 6-Axis Motion / Posture</span>
+                  <span class="font-label-sm text-label-sm bg-primary text-surface px-2 py-0.5 rounded uppercase">ACTIVE</span>
+                </div>
+                <div class="mt-space-sm space-y-1 text-secondary font-body-sm text-body-sm">
+                  <p><strong class="text-primary">I2C Interface:</strong> SDA Pin D4 / SCL Pin D5 (Address 0x68)</p>
+                  <p><strong class="text-primary">Parameters:</strong> Posture Vector, Orientation Angle (°), 3-Axis Accel &amp; Gyro</p>
+                  <p><strong class="text-primary">Scale:</strong> ±2g Accelerometer, ±250 °/s Gyroscope</p>
+                  <p><strong class="text-primary">Early Warning Logic:</strong> Absolute orientation &gt; 90° triggers bed-exit alert</p>
+                </div>
+              </div>
+              <button class="mt-space-md border border-primary text-primary hover:bg-primary hover:text-surface py-1 rounded font-label-md text-label-md uppercase tracking-wider transition-all open-modal-btn" data-sensor="orientation">
+                Open Orientation Diagnostics
+              </button>
+            </div>
+
+            <!-- MAX30102 Spec -->
+            <div class="bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <span class="font-headline-sm text-headline-sm text-primary uppercase font-bold">MAX30102 Pulse Oximeter &amp; Heart Rate</span>
+                  <span class="font-label-sm text-label-sm border border-outline text-secondary px-2 py-0.5 rounded uppercase">STANDBY</span>
+                </div>
+                <div class="mt-space-sm space-y-1 text-secondary font-body-sm text-body-sm">
+                  <p><strong class="text-primary">I2C Interface:</strong> SDA Pin D4 / SCL Pin D5 (Address 0x57)</p>
+                  <p><strong class="text-primary">Optical Sensing:</strong> Red &amp; Infrared LEDs + Photodetector for PPG</p>
+                  <p><strong class="text-primary">Physical State:</strong> Displays disconnected when physically absent</p>
+                  <p><strong class="text-primary">Telemetry Output:</strong> Heart Rate (BPM) emitted when sensor attached</p>
+                </div>
+              </div>
+              <button class="mt-space-md border border-primary text-primary hover:bg-primary hover:text-surface py-1 rounded font-label-md text-label-md uppercase tracking-wider transition-all open-modal-btn" data-sensor="heartrate">
+                Open Heart Rate Diagnostics
+              </button>
+            </div>
+
+            <!-- Piezo Buzzer Spec -->
+            <div class="bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+                  <span class="font-headline-sm text-headline-sm text-primary uppercase font-bold">Hardware Alarm Buzzer</span>
+                  <span class="font-label-sm text-label-sm bg-primary text-surface px-2 py-0.5 rounded uppercase">ACTIVE</span>
+                </div>
+                <div class="mt-space-sm space-y-1 text-secondary font-body-sm text-body-sm">
+                  <p><strong class="text-primary">ESP32 Pin:</strong> GPIO 25 (Digital Output, Active HIGH)</p>
+                  <p><strong class="text-primary">Trigger Logic:</strong> <code class="text-primary bg-brand-lavender/20 px-1">if (temp &gt; 34 || abs(orient) &gt; 90) digitalWrite(25, HIGH);</code></p>
+                  <p><strong class="text-primary">Web Integration:</strong> Alerts trigger strictly on <code class="text-primary bg-brand-lavender/20 px-1">BUZZER: ON ...</code></p>
+                  <p><strong class="text-primary">Clear Logic:</strong> Dismisses strictly on <code class="text-primary bg-brand-lavender/20 px-1">BUZZER: OFF</code></p>
+                </div>
+              </div>
+              <button class="mt-space-md border border-primary text-primary hover:bg-primary hover:text-surface py-1 rounded font-label-md text-label-md uppercase tracking-wider transition-all open-modal-btn" data-sensor="buzzer">
+                Open Buzzer Diagnostics
+              </button>
+            </div>
+          </div>
+        </div><!-- /#tab-sensors -->
+
+
+        <!-- ======================================================= -->
+        <!-- VIEW: ALERTS HISTORY                                    -->
+        <!-- ======================================================= -->
+        <div id="tab-alerts" class="tab-view hidden flex flex-col gap-y-space-lg">
+          <section class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-sm pb-space-sm border-b border-brand-lavender/40">
+            <div>
+              <h2 class="font-headline-lg text-headline-lg text-primary tracking-tight leading-none">Alert Events &amp; Clinical Audit Log</h2>
+              <p class="font-body-sm text-body-sm text-secondary mt-1">Audit log of hardware buzzer triggers and staff acknowledgments</p>
+            </div>
+            <div class="flex items-center gap-space-xs">
+              <span class="font-label-sm text-label-sm uppercase text-secondary">Filter:</span>
+              <button class="alert-filter-btn px-3 py-1 rounded font-label-sm text-label-sm uppercase bg-primary text-surface font-semibold" data-filter="all">All</button>
+              <button class="alert-filter-btn px-3 py-1 rounded font-label-sm text-label-sm uppercase border border-brand-lavender text-primary hover:bg-brand-lavender/10 font-semibold" data-filter="unacknowledged">Unacknowledged</button>
+              <button class="alert-filter-btn px-3 py-1 rounded font-label-sm text-label-sm uppercase border border-brand-lavender text-primary hover:bg-brand-lavender/10 font-semibold" data-filter="acknowledged">Acknowledged</button>
+            </div>
+          </section>
+
+          <section class="bg-surface border border-brand-lavender rounded p-space-md shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-brand-lavender/40 text-secondary font-label-sm text-label-sm uppercase">
+                    <th class="py-space-xs px-space-sm">Trigger Time</th>
+                    <th class="py-space-xs px-space-sm">Event Description</th>
+                    <th class="py-space-xs px-space-sm">Hardware Buzzer</th>
+                    <th class="py-space-xs px-space-sm">Trigger Temp</th>
+                    <th class="py-space-xs px-space-sm">Status</th>
+                    <th class="py-space-xs px-space-sm text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="alerts-page-table-body" class="divide-y divide-brand-lavender/20 font-body-sm text-body-sm text-primary"></tbody>
+              </table>
+            </div>
+          </section>
+        </div><!-- /#tab-alerts -->
+
+
+        <!-- ======================================================= -->
+        <!-- VIEW: SETTINGS                                          -->
+        <!-- ======================================================= -->
+        <div id="tab-settings" class="tab-view hidden flex flex-col gap-y-space-lg">
+          <section class="pb-space-sm border-b border-brand-lavender/40">
+            <h2 class="font-headline-lg text-headline-lg text-primary tracking-tight leading-none">System Settings</h2>
+            <p class="font-body-sm text-body-sm text-secondary mt-1">Serial port parameters, simulation toggles, and live debug monitor</p>
+          </section>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+            <!-- Hardware Connection Card -->
+            <div class="bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between">
+              <div>
+                <span class="font-headline-sm text-headline-sm text-primary uppercase font-bold">ESP32 Hardware Serial Port</span>
+                <div class="mt-space-sm space-y-space-sm text-secondary font-body-sm text-body-sm">
+                  <div class="flex items-center justify-between">
+                    <span>Baud Rate:</span>
+                    <span class="font-bold text-primary">115200 (SERIAL_8N1)</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>Target Microcontroller:</span>
+                    <span class="font-bold text-primary">ESP32 Patient Node 01</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span>ESP32 Hardware Threshold:</span>
+                    <span class="font-bold text-primary tabular-nums">34.0 °C (Hardcoded in Firmware)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-space-md pt-space-sm border-t border-brand-lavender/30 flex items-center gap-space-sm">
+                <button id="btn-settings-connect" class="bg-primary hover:bg-brand-lavender text-surface hover:text-primary px-space-md py-1.5 rounded font-label-md text-label-md uppercase tracking-wider font-semibold transition-all">
+                  Connect ESP32 (Web Serial)
+                </button>
+                <button id="btn-settings-disconnect" class="border border-primary text-primary hover:bg-brand-lavender/20 px-space-md py-1.5 rounded font-label-md text-label-md uppercase tracking-wider font-semibold transition-all">
+                  Disconnect
+                </button>
+              </div>
+            </div>
+
+            <!-- Offline Simulation Controls -->
+            <div class="bg-surface border border-brand-lavender rounded p-space-md flex flex-col justify-between">
+              <div>
+                <span class="font-headline-sm text-headline-sm text-primary uppercase font-bold">ESP32 Firmware Simulator (Offline Testing)</span>
+                <p class="font-body-sm text-body-sm text-secondary mt-1">
+                  Generates identical serial output matching the working ESP32 sketch at 2000ms intervals.
+                </p>
+                <div class="mt-space-sm space-y-2">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="sim-toggle-enable" class="w-4 h-4 text-primary rounded border-brand-lavender"/>
+                    <span class="font-body-sm text-body-sm text-primary font-semibold">Enable Firmware Output Simulation</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="sim-toggle-alert" checked class="w-4 h-4 text-primary rounded border-brand-lavender"/>
+                    <span class="font-body-sm text-body-sm text-primary">Simulate Temperature &gt; 34.0 °C (Emit BUZZER: ON)</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="sim-toggle-orient" class="w-4 h-4 text-primary rounded border-brand-lavender"/>
+                    <span class="font-body-sm text-body-sm text-primary">Simulate Abnormal Orientation (&gt; 90°)</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="sim-toggle-hr" class="w-4 h-4 text-primary rounded border-brand-lavender"/>
+                    <span class="font-body-sm text-body-sm text-primary">Simulate MAX30102 Heart Rate (Optional)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="mt-space-md pt-space-sm border-t border-brand-lavender/30 flex items-center justify-between">
+                <span id="sim-status-label" class="font-label-sm text-label-sm text-secondary uppercase">Simulator: Inactive</span>
+                <button id="btn-clear-history" class="text-secondary hover:text-primary font-label-sm text-label-sm uppercase font-semibold border border-brand-lavender/60 px-2 py-1 rounded">
+                  Clear Local Storage
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Raw Serial Terminal Monitor -->
+          <section class="bg-surface border border-brand-lavender rounded p-space-md shadow-sm">
+            <div class="flex items-center justify-between pb-space-xs border-b border-brand-lavender/40">
+              <div class="flex items-center gap-space-xs">
+                <span class="material-symbols-outlined text-primary text-[20px]">dvr</span>
+                <span class="font-headline-sm text-headline-sm text-primary uppercase font-bold">Raw Serial Terminal (115200 Baud)</span>
+              </div>
+              <button id="btn-clear-terminal" class="font-label-sm text-label-sm uppercase text-secondary hover:text-primary">
+                [ Clear Terminal ]
+              </button>
+            </div>
+            <div id="raw-terminal" class="mt-space-sm h-64 overflow-y-auto bg-brand-surface border border-brand-lavender/40 rounded p-space-sm font-body-sm text-body-sm font-mono text-primary space-y-0.5 select-text">
+              <div class="text-secondary/70">[Ready. Waiting for ESP32 serial data or simulation...]</div>
+            </div>
+          </section>
+        </div><!-- /#tab-settings -->
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- SENSOR DETAIL MODAL                                     -->
+  <!-- ======================================================= -->
+  <div id="sensor-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop p-space-md">
+    <div class="bg-surface border-2 border-primary rounded max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+      <!-- Modal Header -->
+      <div class="px-space-md py-space-sm border-b border-brand-lavender/40 flex items-center justify-between bg-brand-lavender/10">
+        <div class="flex items-center gap-space-xs">
+          <span class="material-symbols-outlined text-primary text-[22px]">analytics</span>
+          <span id="modal-title" class="font-headline-sm text-headline-sm text-primary uppercase font-bold">Sensor Diagnostics</span>
+        </div>
+        <button id="btn-close-modal" class="text-primary hover:text-secondary text-2xl font-bold leading-none p-1">
+          &times;
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-space-md flex flex-col gap-space-md max-h-[80vh] overflow-y-auto">
+        <!-- Live Value & Stat Badges -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+          <div class="p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+            <span class="font-label-sm text-label-sm uppercase text-secondary block">Current</span>
+            <span id="modal-val-curr" class="font-headline-md text-headline-md font-bold text-primary mt-1">--</span>
+          </div>
+          <div class="p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+            <span class="font-label-sm text-label-sm uppercase text-secondary block">Average</span>
+            <span id="modal-val-avg" class="font-headline-md text-headline-md font-bold text-primary mt-1">--</span>
+          </div>
+          <div class="p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+            <span class="font-label-sm text-label-sm uppercase text-secondary block">Min</span>
+            <span id="modal-val-min" class="font-headline-md text-headline-md font-bold text-primary mt-1">--</span>
+          </div>
+          <div class="p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded">
+            <span class="font-label-sm text-label-sm uppercase text-secondary block">Max</span>
+            <span id="modal-val-max" class="font-headline-md text-headline-md font-bold text-primary mt-1">--</span>
+          </div>
+        </div>
+
+        <!-- Expanded Waveform Chart -->
+        <div id="modal-chart-box" class="w-full"></div>
+
+        <!-- Specifications & Pin Mapping -->
+        <div class="p-space-sm bg-brand-lavender/10 border border-brand-lavender/30 rounded text-secondary font-body-sm text-body-sm">
+          <span class="font-label-sm text-label-sm uppercase font-bold text-primary block mb-1">Hardware Interface Specification</span>
+          <div id="modal-spec-text" class="space-y-0.5">--</div>
+        </div>
+
+        <!-- Recent 10 Readings Table -->
+        <div>
+          <span class="font-label-sm text-label-sm uppercase font-bold text-primary block mb-1">Recent Telemetry Frames</span>
+          <div class="border border-brand-lavender/30 rounded overflow-hidden">
+            <table class="w-full text-left border-collapse font-body-sm text-body-sm">
+              <thead class="bg-brand-lavender/10 text-secondary font-label-sm text-label-sm uppercase">
+                <tr>
+                  <th class="p-1.5">Timestamp</th>
+                  <th class="p-1.5">Value</th>
+                  <th class="p-1.5">Buzzer</th>
+                  <th class="p-1.5">Status</th>
+                </tr>
+              </thead>
+              <tbody id="modal-recent-table" class="divide-y divide-brand-lavender/20 text-primary"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-space-md py-space-xs border-t border-brand-lavender/40 bg-surface flex justify-end">
+        <button id="btn-modal-done" class="bg-primary text-surface hover:bg-brand-lavender hover:text-primary px-space-md py-1 rounded font-label-md text-label-md uppercase font-semibold transition-all">
+          Close Diagnostics
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic Modules -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

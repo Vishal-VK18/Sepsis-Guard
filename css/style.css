@@ -1,0 +1,98 @@
+/* ==========================================================================
+   SepsisGuard IoT Patient Early Warning Monitoring System
+   Design System & Custom Styles
+   Colors: Primary (#474C80), Background (#F8F7E2), Lavender Tint (#9DA2CD)
+   ========================================================================== */
+
+:root {
+  --color-primary: #474C80;
+  --color-primary-variant: #393D69;
+  --color-secondary: #5B6096;
+  --color-outline: #7D81A8;
+  --color-outline-variant: #9DA2CD;
+  --color-surface: #F8F7E2;
+  --color-surface-dim: #E8E7CE;
+  --color-surface-high: #F2F0D8;
+}
+
+/* Custom scrollbars matching clinical hardware appearance */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(157, 162, 205, 0.15);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 76, 128, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 76, 128, 0.7);
+}
+
+/* Tabular numbers to prevent horizontal jitter in live sensor displays */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Orientation Radar / Motion Sweeper Animation */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-sweeper {
+  transform-origin: center center;
+  animation: radar-sweep 4s linear infinite;
+}
+
+/* Subtle Kinetic Pulse for Active Alert & Live Indicators */
+@keyframes alert-glow {
+  0%, 100% {
+    border-color: #474C80;
+    box-shadow: 0 0 0 0 rgba(71, 76, 128, 0.45);
+  }
+  50% {
+    border-color: #9DA2CD;
+    box-shadow: 0 0 0 4px rgba(157, 162, 205, 0.3);
+  }
+}
+
+.alert-pulse-border {
+  animation: alert-glow 2s ease-in-out infinite;
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  background-color: rgba(71, 76, 128, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+/* Print Styles for Reports */
+@media print {
+  aside, header, #alert-banner, .no-print, button, .tab-nav-btn {
+    display: none !important;
+  }
+  body, main {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .pl-72 {
+    padding-left: 0 !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .report-table {
+    border: 1px solid #ccc !important;
+    width: 100% !important;
+  }
+}
